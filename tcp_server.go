@@ -5,10 +5,12 @@ import (
 	"log"
 	"net"
 	"sync"
+
+	"github.com/jonhovd/is105sem03/mycrypt"
+	// bytt ut med riktig import for mycrypt-pakken
 )
 
 func main() {
-
 	var wg sync.WaitGroup
 
 	server, err := net.Listen("tcp", "172.17.0.3:")
@@ -37,10 +39,17 @@ func main() {
 						return // fra for løkke
 					}
 					switch msg := string(buf[:n]); msg {
-  				        case "ping":
+					case "ping":
 						_, err = c.Write([]byte("pong"))
 					default:
-						_, err = c.Write(buf[:n])
+						dekryptertMelding := mycrypt.Krypter([]rune(string(buf[:n])), mycrypt.ALF_SEM03, len(mycrypt.ALF_SEM03)-4)
+						log.Println("Dekrypter melding: ", string(dekryptertMelding))
+						switch msg := string(dekryptertMelding); msg {
+						case "ping":
+							_, err = c.Write([]byte("pong"))
+						default:
+							_, err = c.Write([]byte(msg))
+						}
 					}
 					if err != nil {
 						if err != io.EOF {
